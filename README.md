@@ -1,87 +1,64 @@
-# Project Title
+# Image Colorizer
 
-One Paragraph of project description goes here
+This Project aims to convert a grayscale image to colorized image, using Linear regression and Logistic regression models.
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
-
 ### Prerequisites
 
-What things you need to install the software and how to install them
-
 ```
-Give examples
+pip install numpy
+pip install opencv-python
 ```
-
-### Installing
-
-A step by step series of examples that tell you how to get a development env running
-
-Say what the step will be
-
-```
-Give the example
-```
-
-And repeat
-
-```
-until finished
-```
-
-End with an example of getting some data out of the system or using it for a little demo
 
 ## Running the tests
 
-Explain how to run the automated tests for this system
-
-### Break down into end to end tests
-
-Explain what these tests test and why
-
 ```
-Give an example
+python colorizer.py
 ```
+Place the input file in the desired directory, and add it as a variable to the colorizer.py file.
 
-### And coding style tests
+## Representing the process
 
-Explain what these tests test and why
+The image is represented as a 2D matrix of pixels values. We are mapping the grayscale to RGB values, but instead of having the RGB value for a single pixel, we consider the RGB value for a block of 3X3 surrounding pixels.
 
-```
-Give an example
-```
+## Data
 
-## Deployment
+We are collecting the training images of flowers from http://pexels.com/. For every pixel, we include the RGB values of all the pixels in the surrounding grid of 3X3. We scale the RGB values from 0-255 to 0-1. This is done to ensure that our gradient descent function doesn't overflow.
 
-Add additional notes about how to deploy this on a live system
+We perform quantization so that complex images can be decomposed into a palette of colors (6 to 10). Since humans are not able to visualize every possible minute color combination, quantization can be done in such a way so that there is minimal perceptual loss, while making training and classification easier. This step is done using K-means clustering algorithm.
 
-## Built With
+## Evaluating the Model
 
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
+![Alt text](loss_function.png?raw=true "Loss Function")
 
-## Contributing
+While colorizing a grayscale image, the program makes some perceptual errors. These errors include failure to capture long-range consistency, frequent confusions between red and blue, and a default sepia tone on some images.
 
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
+We compute the final loss at the end to compare the image we colorize to the original image. Also, the loss function depends on the image size - higher the image size; more the pixels leading to more training data and ultimately higher loss. Relative evaluation between images of different sizes is difficult as a result.
 
-## Versioning
+## Training the models
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags).
+Training the model on a set of images becomes time consuming especially for higher resolution images. Generally, an image will contain far fewer colors than the entire set of color possibilities. One approach to reducing the color space is to assign colors into a set of predefined bins of color ranges. This serves to effectively reduce the color space and complexity of the image. We expand on this idea by using k-means to reduce the color space of K representative colors.
 
-## Authors
+For linear regression, convergence was achieved when the difference in loss of the current iteration is less than 0.05*(previous loss). Two methods were implemented to avoid over-fitting: normalizing the data and including a regularization term in the loss function.
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
+For classification, instead of creating classes based on bins on each R(0-255), G(0-255) and B(0-255) value, we use image quantization to create unique colors to classify on. This technique is much more helpful, as we get a palette of colors based on our image data rather.  Couple of problems we might face here; we need to have palette of most of the general colors. We took images that have a variety of colors on it to ensure this.
 
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
+After setting the number of unique colors, we use logistic regression with sigmoid function as one-vs-many classifier to classify each pixel as one of the colors of the palette. Logistic regression adds one layer of non-linearity to our model.
 
-## License
+## Sample Results
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+Original image
+
+![Alt text](2.jpg?raw=true "Original Image")
+
+Colorized image
+
+![Alt text](2_c.png?raw=true "Colorized Image")
+
 
 ## Acknowledgments
 
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
+* Kunal Shah
+* Vedang Mehta
+* Nick Romanov
